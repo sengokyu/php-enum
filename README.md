@@ -7,7 +7,7 @@ This is a Java like enum class emulation.
 
 ## Usage
 
-~~~php:
+```php
 <?php
 
 use Sengokyu\Lang\PHPEnum;
@@ -43,8 +43,7 @@ function dayEnumTest(Day $day)
    }
 }
 
-dayEnumTest(Day::MONDAY());
-dayEnumTest(Day::SATURDAY());
-dayEnuMTest(Day::SUNDAY());
-
-~~~
+dayEnumTest(Day::MONDAY());   // -: Mondays are bad.
+dayEnumTest(Day::SATURDAY()); // -: Weekends are best.
+dayEnuMTest(Day::SUNDAY());   // -: Weekends are best.
+```
