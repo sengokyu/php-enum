@@ -7,9 +7,7 @@ namespace Sengokyu\Lang;
  */
 abstract class PHPEnum
 {
-    private static $ordinalToInstance = [];
-    private static $nameToInstance = [];
-    
+    private static $internals = [];
     private $ordinal;
     private $name;
     
@@ -41,20 +39,14 @@ abstract class PHPEnum
     {
         self::callInitialize();
 
-        return self::$ordinalToInstance;
+        return self::getInternal(get_called_class())->values();
     }
 
     public static function valueOf($nameOrOrdinal) : PHPEnum
     {
         self::callInitialize();
 
-        $test = is_string($nameOrOrdinal) ? self::$nameToInstance : self::$ordinalToInstance;
-
-        if (!array_key_exists($nameOrOrdinal, $test)) {
-            throw new \InvalidArgumentException("There are no enum constant that name/ordinal ${nameOrOrdinal}");
-        }
-
-        return $test[$nameOrOrdinal];
+        return self::getInternal(get_called_class())->valueOf($nameOrOrdinal);
     }
 
     public static function __callStatic($name, $arguments)
@@ -70,11 +62,19 @@ abstract class PHPEnum
         $instance->name = $name;
         $instance->ordinal = $ordinal;
 
-        self::$nameToInstance[$name] = $instance;
-        self::$ordinalToInstance[$ordinal] = $instance;
+        self::getInternal(get_called_class())->register($name, $instance, $ordinal);
     }
 
     abstract protected static function initialize();
+
+    private static function getInternal($clazz)
+    {
+        if (!array_key_exists($clazz, self::$internals)) {
+            self::$internals[$clazz] = new PHPEnumInternal();
+        }
+
+        return self::$internals[$clazz];
+    }
 
     private static function createInstance()
     {
@@ -85,19 +85,21 @@ abstract class PHPEnum
 
     private static function getOrdinal()
     {
-        if (0 === sizeof(self::$ordinalToInstance)) {
+        $values = self::getInternal(get_called_class())->values();
+
+        if (0 === sizeof($values)) {
             return 0;
         }
         else {
-            $keys = array_keys(self::$ordinalToInstance);
+            $keys = array_keys($values);
             end($keys);
-            return key($keys) + 1;
+            return current($keys) + 1;
         }
     }
 
     private static function isInitialized()
     {
-        return !empty(self::$ordinalToInstance);
+        return array_key_exists(get_called_class(), self::$internals);
     }
 
     private static function callInitialize()
@@ -105,6 +107,36 @@ abstract class PHPEnum
         if (!self::isInitialized()) {
             static::initialize();
         }
+    }
+}
+
+
+class PHPEnumInternal
+{
+    private $ordinalToInstance = [];
+    private $nameToInstance = [];
+
+    public function register($name, PHPEnum $instance, $ordinal)
+    {
+        $this->ordinalToInstance[$ordinal] = $instance;
+        $this->nameToInstance[$name] = $instance;
+    }
+
+    public function values()
+    {
+        return $this->ordinalToInstance;
+    }
+
+    public function valueOf($nameOrOrdinal)
+    {
+        $test = is_string($nameOrOrdinal) ?
+          $this->nameToInstance : $this->ordinalToInstance;
+
+        if (!array_key_exists($nameOrOrdinal, $test)) {
+            throw new \InvalidArgumentException("There are no enum constant that name/ordinal ${nameOrOrdinal}");
+        }
+
+        return $test[$nameOrOrdinal];
     }
 }
 

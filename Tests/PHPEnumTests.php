@@ -18,6 +18,30 @@ class Day extends PHPEnum
     }
 }
 
+class Planet extends PHPEnum
+{
+    private $massRatio;
+
+    private function __construct($massRatio)
+    {
+        $this->massRatio = $massRatio;
+    }
+
+    public function getMassRatio()
+    {
+        return $this->massRatio;
+    }
+
+    protected static function initialize()
+    {
+        self::register('MERCURY', new Planet(0.055), 1);
+        self::register('VINUS', new Planet(0.815));
+        self::register('EARTH', new Planet(1.000));
+        self::register('MARS', new Planet(0.107));
+        self::register('JUPITER', new Planet(317.83));
+    }
+}
+
 
 
 class PHPEnumTests extends TestCase
@@ -31,6 +55,12 @@ class PHPEnumTests extends TestCase
         $this->assertEquals(4, Day::THURSDAY()->ordinal());
         $this->assertEquals(5, Day::FRIDAY()->ordinal());
         $this->assertEquals(6, Day::SATURDAY()->ordinal());
+
+        $this->assertEquals(1, Planet::MERCURY()->ordinal());
+        $this->assertEquals(2, Planet::VINUS()->ordinal());
+        $this->assertEquals(3, Planet::EARTH()->ordinal());
+        $this->assertEquals(4, Planet::MARS()->ordinal());
+        $this->assertEquals(5, Planet::JUPITER()->ordinal());
     }
 
     public function testName()
@@ -50,6 +80,14 @@ class PHPEnumTests extends TestCase
 
         $this->assertCount(7, $actual);
         $this->assertContainsOnlyInstancesOf(Day::class, $actual);
+    }
+
+    public function testValues_2()
+    {
+        $actual = Planet::values();
+
+        $this->assertCount(5, $actual);
+        $this->assertContainsOnlyInstancesOf(Planet::class, $actual);
     }
 
     public function testValueOfByString()
